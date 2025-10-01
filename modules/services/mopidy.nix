@@ -12,6 +12,7 @@ let
     mkOption
     types
     ;
+  inherit (pkgs.stdenv.hostPlatform) isLinux isDarwin;
 
   cfg = config.services.mopidy;
 
@@ -138,9 +139,6 @@ in
   };
 
   config = mkIf cfg.enable {
-    assertions = [
-      (lib.hm.assertions.assertPlatform "services.mopidy" pkgs lib.platforms.linux)
-    ];
 
     xdg.configFile."mopidy/mopidy.conf".source =
       settingsFormat.generate "mopidy-${config.home.username}" cfg.settings;
@@ -183,5 +181,50 @@ in
 
       Install.WantedBy = [ "default.target" ];
     };
+    launchd.agents.mopidy-scan = mkIf hasMopidyLocal {
+      enable = true;
+      config = {
+        ProgramArguments = [
+          "${mopidyEnv}/bin/mopidy"
+          "--config"
+          configFilePaths
+          "local"
+          "scan"
+        ];
+        RunAtLoad = true;
+        StandardOutPath = "${config.xdg.stateHome}/mopidy/mopidy-scan.log";
+        StandardErrorPath = "${config.xdg.stateHome}/mopidy/mopidy-scan.err";
+        WorkingDirectory = config.xdg.stateHome;
+        EnvironmentVariables = {
+          PATH = lib.makeBinPath [
+            pkgs.python3
+            pkgs.python3Packages.virtualenv
+          ];
+        };
+      };
+    };
+    launchd.agents.mopidy = {
+      enable = true;
+      config = {
+        ProgramArguments = [
+          "${mopidyEnv}/bin/mopidy"
+          "--config"
+          configFilePaths
+        ];
+        RunAtLoad = true;
+        KeepAlive = true;
+        StandardOutPath = "${config.xdg.stateHome}/mopidy/mopidy.log";
+        StandardErrorPath = "${config.xdg.stateHome}/mopidy/mopidy.err";
+        WorkingDirectory = config.xdg.stateHome;
+        EnvironmentVariables = {
+          PATH = lib.makeBinPath [
+            pkgs.python3
+            pkgs.python3Packages.virtualenv
+          ];
+        };
+      };
+
+    };
+
   };
 }

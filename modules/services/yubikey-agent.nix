@@ -37,7 +37,7 @@ in
           fish = ''set -x SSH_AUTH_SOCK "${socketPath}"'';
           nushell = "$env.SSH_AUTH_SOCK = ${
             if pkgs.stdenv.isDarwin then
-              "/tmp/yubikey-agent.sock"
+              ''"${socketPath}"''
             else
               ''$"($env.XDG_RUNTIME_DIR | default $"/run/user/(id -u)")/yubikey-agent/yubikey-agent.sock"''
           }";

@@ -18,6 +18,7 @@ let
     brave-origin = "Brave Origin";
     vivaldi = "Vivaldi Browser";
     microsoft-edge = "Microsoft Edge";
+    helium = "Helium Browser";
   };
 
   plasmaSupportedBrowsers = [
@@ -237,11 +238,13 @@ let
         brave = "BraveSoftware/Brave-Browser";
         brave-origin = "BraveSoftware/Brave-Origin";
         microsoft-edge = "Microsoft Edge";
+        helium = "net.imput.helium";
       };
 
       linuxDirs = {
         brave = "BraveSoftware/Brave-Browser";
         brave-origin = "BraveSoftware/Brave-Origin";
+        helium = "net.imput.helium";
       };
 
       configDir =

@@ -18,6 +18,10 @@ let
   gpgPkg = config.programs.gpg.package;
 
   inherit (config.programs.gpg) homedir;
+  wrapperDrv = pkgs.runCommandCC "gpg-agent-wrapper" { } ''
+    mkdir -p $out/bin
+    $CC ${./wrapper.c} -o $out/bin/gpg-agent-wrapper
+  '';
 
   gpgSshSupportStr = "${gpgPkg}/bin/gpg-connect-agent --quiet updatestartuptty /bye";
 
@@ -151,7 +155,7 @@ let
 
   # Launchd agent socket generator.
   mkAgentSock = name: {
-    SockType = "stream";
+    SockType = "unix";
     SockPathName = gpgconf name;
     SockPathMode = 384; # Property lists don't support octal literals (0600 = 384).
   };
@@ -456,6 +460,7 @@ in
       enable = true;
       config = {
         ProgramArguments = [
+          "${wrapperDrv}/bin/gpg-agent-wrapper"
           "${gpgPkg}/bin/gpg-agent"
           "--supervised"
         ]
@@ -470,9 +475,9 @@ in
         ProcessType = "Background";
         RunAtLoad = cfg.enableSshSupport;
         Sockets = {
-          Agent = mkAgentSock "S.gpg-agent";
-          Ssh = mkIf cfg.enableSshSupport (mkAgentSock "S.gpg-agent.ssh");
-          Extra = mkIf cfg.enableExtraSocket (mkAgentSock "S.gpg-agent.extra");
+          std = mkAgentSock "S.gpg-agent";
+          ssh = mkIf cfg.enableSshSupport (mkAgentSock "S.gpg-agent.ssh");
+          extra = mkIf cfg.enableExtraSocket (mkAgentSock "S.gpg-agent.extra");
         };
       };
     };
